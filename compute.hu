@@ -1,0 +1,1 @@
+__global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel);

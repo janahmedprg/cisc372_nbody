@@ -5,19 +5,21 @@
 #include "vector.h"
 #include "config.h"
 #include "planets.h"
-#include "compute.h"
+#include "compute.hu"
+
 
 // represents the objects in the system.  Global variables
-vector3 *hVel, *d_hVel;
-vector3 *hPos, *d_hPos;
+vector3 *hVel;
+vector3 *hPos;
 double *mass;
+
 
 //initHostMemory: Create storage for numObjects entities in our system
 //Parameters: numObjects: number of objects to allocate
 //Returns: None
 //Side Effects: Allocates memory in the hVel, hPos, and mass global variables
 void initHostMemory(int numObjects)
-{
+{	
 	hVel = (vector3 *)malloc(sizeof(vector3) * numObjects);
 	hPos = (vector3 *)malloc(sizeof(vector3) * numObjects);
 	mass = (double *)malloc(sizeof(double) * numObjects);
@@ -29,8 +31,8 @@ void initHostMemory(int numObjects)
 //Side Effects: Frees the memory allocated to global variables hVel, hPos, and mass.
 void freeHostMemory()
 {
-	free(hVel);
 	free(hPos);
+	free(hVel);
 	free(mass);
 }
 
@@ -58,7 +60,7 @@ void planetFill(){
 //Side Effects: Fills count entries in our system starting at index start (0 based)
 void randomFill(int start, int count)
 {
-	int i, j, c = start;
+	int i, j = start;
 	for (i = start; i < start + count; i++)
 	{
 		for (j = 0; j < 3; j++)
@@ -91,6 +93,11 @@ void printSystem(FILE* handle){
 
 int main(int argc, char **argv)
 {
+	double *d_mass;
+	vector3 *d_hPos, *d_hVel;
+	cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
+	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
 	clock_t t0=clock();
 	int t_now;
 	//srand(time(NULL));
@@ -102,14 +109,25 @@ int main(int argc, char **argv)
 	#ifdef DEBUG
 	printSystem(stdout);
 	#endif
+	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
+	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
+	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 dimGrid(NUMENTITIES / dimBlock.x, NUMENTITIES / dimBlock.y);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute();
+		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel);
+		cudaDeviceSynchronize();
 	}
 	clock_t t1=clock()-t0;
+	cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
 #ifdef DEBUG
 	printSystem(stdout);
 #endif
 	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
 
 	freeHostMemory();
+	cudaFree(d_hVel);
+	cudaFree(d_hPos);
+	cudaFree(d_mass);
 }
