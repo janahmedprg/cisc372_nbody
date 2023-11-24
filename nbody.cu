@@ -109,18 +109,18 @@ int main(int argc, char **argv)
 	#ifdef DEBUG
 	printSystem(stdout);
 	#endif
-	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
-	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
 	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(NUMENTITIES / dimBlock.x, NUMENTITIES / dimBlock.y);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
+		cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
+		cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel);
 		cudaDeviceSynchronize();
+		cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
 	}
-	clock_t t1=clock()-t0;
-	cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	clock_t t1=clock()-t0;	
 #ifdef DEBUG
 	printSystem(stdout);
 #endif
