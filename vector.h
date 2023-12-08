@@ -3,8 +3,5 @@
 
 typedef double vector3[3];
 #define FILL_VECTOR(vector,a,b,c) {vector[0]=a;vector[1]=b;vector[2]=c;}
-extern vector3 *d_hVel;
-extern vector3 *d_hPos;
-extern double *d_mass;
 
 #endif
