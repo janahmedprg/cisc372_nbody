@@ -33,11 +33,13 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	// __syncthreads();
 
 	__shared__ vector3 distance[16][16];
+	distance[x][y][k]=d_hPos[i][k]-d_hPos[j][k];
+	__syncthreads();
+	
 	if (i==j) {
 		d_accels[i*d_numObjects + j][k] = 0;
 	}
 	else{
-		distance[x][y][k]=d_hPos[i][k]-d_hPos[j][k];
 		double magnitude_sq=distance[x][y][0]*distance[x][y][0]+distance[x][y][1]*distance[x][y][1]+distance[x][y][2]*distance[x][y][2];
 		double magnitude=sqrt(magnitude_sq);
 		double accelmag=-1*GRAV_CONSTANT*d_mass[j]/magnitude_sq;
