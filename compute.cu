@@ -33,6 +33,7 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	// __syncthreads();
 
 	__shared__ vector3 distance[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ vector3 accels_sum_sub[BLOCK_SIZE];
 	distance[x][y][k]=d_hPos[i][k]-d_hPos[j][k];
 	__syncthreads();
 	
@@ -46,13 +47,15 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 		accelmag=-1*GRAV_CONSTANT*d_mass[j]/magnitude_sq;
 	}
 	__syncthreads();
-	d_accels[i*NUMENTITIES + j][k] = accelmag*distance[x][y][k]/magnitude;
-	d_accels_sum[i][k] = 0;
+	if(i != j){
+		d_accels[i*NUMENTITIES + j][k] = accelmag*distance[x][y][k]/magnitude;
+	}
+	accels_sum_sub[i][k] = 0;
 	__syncthreads();
 
-	d_accels_sum[i][k]+=d_accels[i*NUMENTITIES + j][k];
+	accels_sum_sub[i][k]+=d_accels[i*NUMENTITIES + j][k];
 	__syncthreads();
-	d_hVel[i][k]+=d_accels_sum[i][k]*INTERVAL;
+	d_hVel[i][k]+=accels_sum_sub[i][k]*INTERVAL;
 	d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
 }
 
