@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 	dim3 dimGrid((NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.x, (NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.y,1);
 	printf("%d\n",dimBlock.z);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_numObjects, d_accels_sum);
+		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_accels_sum);
 		// cudaError_t cudaStatus = cudaGetLastError();
 		// if (cudaStatus != cudaSuccess) {
 		// 	fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
