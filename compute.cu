@@ -10,8 +10,6 @@
 //Side Effect: Modifies the hPos and hVel arrays with the new positions and accelerations after 1 INTERVAL
 __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector3* d_accels, int d_numObjects, vector3* d_accels_sum){
 	//make an acceleration matrix which is NUMENTITIES squared in size;
-	int dimX = blockDim.x;
-	int dimY = blockDim.y;
 	int i = blockIdx.y*blockDim.y + threadIdx.y;
 	int j = blockIdx.x*blockDim.x + threadIdx.x;
 	int k = threadIdx.z;
@@ -34,7 +32,7 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	// massSub[col] = d_mass[blockCol + col];	
 	// __syncthreads();
 
-	__shared__ vector3 distance[dimX][dimY];
+	__shared__ vector3 distance[16][16];
 	if (i==j) {
 		d_accels[i*d_numObjects + j][k] = 0;
 	}
