@@ -113,7 +113,11 @@ int main(int argc, char **argv)
 	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
 	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
 	cudaMalloc(&d_accels, sizeof(vector3) *NUMENTITIES*NUMENTITIES);
-	cudaMalloc(&d_accels_sum, sizeof(vector3) * NUMENTITIES);
+	cudaError_t cudaStatus = cudaMalloc(&d_accels_sum, sizeof(vector3) * NUMENTITIES);
+	if (cudaStatus != cudaSuccess){
+		fprintf(stderr, "Device memory allocation failed: %s/n", cudaGetErrorString(cudaStatus));
+		return 1;
+	}
 
 	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
