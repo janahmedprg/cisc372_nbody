@@ -16,6 +16,8 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	int col = threadIdx.x;
 	int k = threadIdx.z;
 
+	printf("%d",blockRow);
+
 	// __shared__ vector3 accelsSub[BLOCK_SIZE * BLOCK_SIZE];
 	// __shared__ vector3 hPosSub[2*BLOCK_SIZE];
 	// __shared__ double massSub[BLOCK_SIZE];

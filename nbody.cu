@@ -113,19 +113,21 @@ int main(int argc, char **argv)
 	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
 	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
 	cudaMalloc(&d_accels, sizeof(vector3) *NUMENTITIES*NUMENTITIES);
-	cudaError_t cudaStatus = cudaMalloc(&d_accels_sum, sizeof(vector3) * NUMENTITIES);
-	if (cudaStatus != cudaSuccess){
-		fprintf(stderr, "Device memory allocation failed: %s/n", cudaGetErrorString(cudaStatus));
-		return 1;
-	}
+	cudaMalloc(&d_accels_sum, sizeof(vector3) * NUMENTITIES);	
 
 	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
 	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE,3);
-	dim3 dimGrid((NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.x, (NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.y);
+	dim3 dimGrid((NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.x, (NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.y,1);
+	printf("%d\n",dimBlock.z);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_numObjects, d_accels_sum);
+		// cudaError_t cudaStatus = cudaGetLastError();
+		// if (cudaStatus != cudaSuccess) {
+		// 	fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+		// 	return 1;
+		// }
 		cudaDeviceSynchronize();
 		// sumAccels<<<dimGrid, dimBlock>>>(d_hPos, d_hVel, d_accels, d_accels_sum);
 		// cudaDeviceSynchronize();
