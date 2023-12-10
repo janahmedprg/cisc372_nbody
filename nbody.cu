@@ -120,6 +120,11 @@ int main(int argc, char **argv)
 	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES,cudaMemcpyHostToDevice);
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE,3);
 	dim3 dimGrid((NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.x, (NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.y,1);
+	dim3 sumBlocks, sumGrid, velBlocks, velGrid;
+	sumBlocks.x = 340; sumBlocks.y = 1; sumBlocks.z = 3;
+	sumGrid.x = (NUMENTITIES + sumBlocks.x - 1)/ sumBlocks.x; sumGrid.y = NUMENTITIES; sumGrid.z = 1;
+	velBlocks.x = 1; velBlocks.y = 340; velBlocks.z = 3;
+	velGrid.x = NUMENTITIES; velGrid.y = (NUMENTITIES + velBlocks.y - 1)/ velBlocks.y; velGrid.z = 1;
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_accels_sum);
 		// cudaError_t cudaStatus = cudaGetLastError();
@@ -128,8 +133,10 @@ int main(int argc, char **argv)
 		// 	return 1;
 		// }
 		cudaDeviceSynchronize();
-		// sumAccels<<<dimGrid, dimBlock>>>(d_hPos, d_hVel, d_accels, d_accels_sum);
-		// cudaDeviceSynchronize();
+		sumAccels<<<sumGrid, sumBlocks>>>(d_accels, d_accels_sum);
+		cudaDeviceSynchronize();
+		updateVelPos<<<velGrid, velBlocks>>>(d_hPos, d_hVel, d_accels_sum);
+		cudaDeviceSynchronize();
 	}
 	cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
 	cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);

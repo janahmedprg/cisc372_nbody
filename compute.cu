@@ -13,8 +13,8 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	int i = blockIdx.y*blockDim.y + threadIdx.y;
 	int j = blockIdx.x*blockDim.x + threadIdx.x;
 	int k = threadIdx.z;
-	int x = threadIdx.x;
-	int y = threadIdx.y;
+	int x = threadIdx.y;
+	int y = threadIdx.x;
 
 	if(i>NUMENTITIES){
 		return;
@@ -33,7 +33,7 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	// __syncthreads();
 
 	__shared__ vector3 distance[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ vector3 accels_sum_sub[BLOCK_SIZE];
+	// __shared__ vector3 accels_sum_sub[BLOCK_SIZE];
 	distance[x][y][k]=d_hPos[i][k]-d_hPos[j][k];
 	__syncthreads();
 	
@@ -50,27 +50,37 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	if(i != j){
 		d_accels[i*NUMENTITIES + j][k] = accelmag*distance[x][y][k]/magnitude;
 	}
-	accels_sum_sub[i][k] = 0;
-	__syncthreads();
-
-	accels_sum_sub[i][k]+=d_accels[i*NUMENTITIES + j][k];
-	__syncthreads();
-	d_hVel[i][k]+=accels_sum_sub[i][k]*INTERVAL;
-	d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
+	d_accels_sum[i][k] = 0;
 }
 
-// __global__ void sumAccels(vector3 *d_hPos, vector3 *d_hVel, vector3 **d_accels, vector3 *d_accels_sum){
-// 	int blockRow = blockIdx.y;
-// 	int blockCol = blockIdx.x;
-// 	int row = threadIdx.y;
-// 	int col = threadIdx.x;
-// 	int k = threadIdx.z;
+__global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
+	int i = blockIdx.y*blockDim.y + threadIdx.y;
+	int k = threadIdx.z;
+	int x = threadIdx.x;
 
-// 	d_accels_sum[blockRow + row][k] = 0;
-// 	__syncthreads();
+	int size = ((NUMENTITIES+blockDim.x-1)/blockDim.x) * blockDim.x;
+	__shared__ vector3 subRow[blockDim.x];
+	int idx;
+	for (idx = 0; idx<size; idx += blockDim.x){
+		subRow[x][k] += (x + idx)<NUMENTITIES ? d_accels[i * NUMENTITIES + x + idx][k] : 0;
+	}
+	__syncthreads();
 
-// 	d_accels_sum[blockRow + row][k]+=d_accels[blockRow+row][blockCol + col][k];
-// 	__syncthreads();
-// 	d_hVel[blockRow + row][k]+=d_accels_sum[blockRow + row][k]*INTERVAL;
-// 	d_hPos[blockRow + row][k]+=d_hVel[blockRow + row][k]*INTERVAL;
-// }
+	for(int stride = 1; stride<blockDim.x; stride *= 2){
+		int arrIdx = x*stride*2;	
+		if(x+ stride<blockDim.x){
+			subRow[arrIdx][k] += subRow[arrIdx + stride][k];
+		}
+		__syncthreads();
+	}
+	if (x == 0){
+		d_accels_sum[i][k]=subRow[0][k];
+	}
+}
+
+__global__ void updateVelPos(vector3 *d_hPos, vector3 *d_hVel, vector3* d_accels_sum){
+	int i = blockIdx.y*blockDim.y + threadIdx.y;
+	int k = threadIdx.z;
+	d_hVel[i][k]+=d_accels_sum[i][k]*INTERVAL;
+	d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
+}
