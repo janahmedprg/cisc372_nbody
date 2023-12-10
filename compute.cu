@@ -70,14 +70,13 @@ __global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
 	}
 	__syncthreads();
 
-	// for(int stride = 1; stride<blockDim.x; stride *= 2){
-	// 	int arrIdx = x*stride*2;	
-	// 	if(x+ stride<blockDim.x){
-	// 		subRow[arrIdx][k] += subRow[arrIdx + stride][k];
-	// 	}
-	// 	__syncthreads();
-	// }
-	if (x == 0){
+	for(int stride = BLOCK_S/2; stride>=1; stride /= 2){
+		if(x <stride){
+			subRow[x][k] += subRow[x + stride][k];
+		}
+		__syncthreads();
+	}
+	if (x == 0){	
 		d_accels_sum[i][k]=subRow[0][k];
 	}
 }

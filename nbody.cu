@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 	dim3 sumBlocks, sumGrid, velBlocks, velGrid;
 	sumBlocks.x = BLOCK_S; sumBlocks.y = 1; sumBlocks.z = 3;
 	sumGrid.x = 1; sumGrid.y = NUMENTITIES; sumGrid.z = 1;
-	velBlocks.x = 1; velBlocks.y = BLOCK_S; velBlocks.z = 3;
+	velBlocks.x = 1; velBlocks.y = BLOCK_V; velBlocks.z = 3;
 	velGrid.x = 1; velGrid.y = (NUMENTITIES + velBlocks.y - 1)/ velBlocks.y; velGrid.z = 1;
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_accels_sum);

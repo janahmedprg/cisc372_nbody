@@ -13,11 +13,12 @@
 #define MAX_DISTANCE 5000.0
 #define MAX_VELOCITY 50000.0
 #define MAX_MASS 938e18  //approximate mass of ceres.
-#define DURATION 1//(10*YEAR)
+#define DURATION (10*YEAR)
 #define INTERVAL DAY
 
 #define BLOCK_SIZE 16
-#define BLOCK_S 340
+#define BLOCK_S 256
+#define BLOCK_V 340
 //End Configurable
 
 #define NUMENTITIES (NUMPLANETS+NUMASTEROIDS+1)
