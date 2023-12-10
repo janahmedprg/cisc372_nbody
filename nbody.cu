@@ -127,30 +127,22 @@ int main(int argc, char **argv)
 	velGrid.x = 1; velGrid.y = (NUMENTITIES + velBlocks.y - 1)/ velBlocks.y; velGrid.z = 1;
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_accels_sum);
-		cudaError_t cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess) {
-			fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-			return 1;
-		}
+		// cudaError_t cudaStatus = cudaGetLastError();
+		// if (cudaStatus != cudaSuccess) {
+		// 	fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+		// 	return 1;
+		// }
 		cudaDeviceSynchronize();
+
 		sumAccels<<<sumGrid, sumBlocks>>>(d_accels, d_accels_sum);
-		cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess) {
-			fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-			return 1;
-		}
 		cudaDeviceSynchronize();
-		updateVelPos<<<velGrid, velBlocks>>>(d_hPos, d_hVel, d_accels_sum);
-		cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess) {
-			fprintf(stderr, "Kernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-			return 1;
-		}
+
+		updateVelPos<<<velGrid, velBlocks>>>(d_hPos, d_hVel, d_accels_sum);	
 		cudaDeviceSynchronize();
 	}
 	cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
 	cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
-	clock_t t1=clock()-t0;	
+	clock_t t1=clock()-t0;
 #ifdef DEBUG
 	printSystem(stdout);
 #endif
