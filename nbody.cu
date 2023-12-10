@@ -121,9 +121,9 @@ int main(int argc, char **argv)
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE,3);
 	dim3 dimGrid((NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.x, (NUMENTITIES + BLOCK_SIZE - 1) / dimBlock.y,1);
 	dim3 sumBlocks, sumGrid, velBlocks, velGrid;
-	sumBlocks.x = 340; sumBlocks.y = 1; sumBlocks.z = 3;
+	sumBlocks.x = BLOCK_S; sumBlocks.y = 1; sumBlocks.z = 3;
 	sumGrid.x = (NUMENTITIES + sumBlocks.x - 1)/ sumBlocks.x; sumGrid.y = NUMENTITIES; sumGrid.z = 1;
-	velBlocks.x = 1; velBlocks.y = 340; velBlocks.z = 3;
+	velBlocks.x = 1; velBlocks.y = BLOCK_S; velBlocks.z = 3;
 	velGrid.x = NUMENTITIES; velGrid.y = (NUMENTITIES + velBlocks.y - 1)/ velBlocks.y; velGrid.z = 1;
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute<<<dimGrid, dimBlock>>>(d_mass, d_hPos, d_hVel, d_accels, d_accels_sum);

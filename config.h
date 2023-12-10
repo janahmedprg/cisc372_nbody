@@ -17,6 +17,7 @@
 #define INTERVAL DAY
 
 #define BLOCK_SIZE 16
+#define BLOCK_S 340
 //End Configurable
 
 #define NUMENTITIES (NUMPLANETS+NUMASTEROIDS+1)

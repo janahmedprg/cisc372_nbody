@@ -59,7 +59,7 @@ __global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
 	int x = threadIdx.x;
 
 	int size = ((NUMENTITIES+blockDim.x-1)/blockDim.x) * blockDim.x;
-	__shared__ vector3 subRow[blockDim.x];
+	__shared__ vector3 subRow[BLOCK_S];
 	int idx;
 	for (idx = 0; idx<size; idx += blockDim.x){
 		subRow[x][k] += (x + idx)<NUMENTITIES ? d_accels[i * NUMENTITIES + x + idx][k] : 0;
