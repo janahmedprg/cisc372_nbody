@@ -16,10 +16,10 @@ __global__ void compute(double *d_mass, vector3 *d_hPos, vector3 *d_hVel, vector
 	int x = threadIdx.y;
 	int y = threadIdx.x;
 
-	if(i>NUMENTITIES){
+	if(i>=NUMENTITIES){
 		return;
 	}
-	if(j>NUMENTITIES){
+	if(j>=NUMENTITIES){
 		return;
 	}
 
@@ -58,6 +58,10 @@ __global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
 	int k = threadIdx.z;
 	int x = threadIdx.x;
 
+	if(i>=NUMENTITIES){
+		return;
+	}
+
 	int size = ((NUMENTITIES+blockDim.x-1)/blockDim.x) * blockDim.x;
 	__shared__ vector3 subRow[BLOCK_S];
 	int idx;
@@ -66,13 +70,13 @@ __global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
 	}
 	__syncthreads();
 
-	for(int stride = 1; stride<blockDim.x; stride *= 2){
-		int arrIdx = x*stride*2;	
-		if(x+ stride<blockDim.x){
-			subRow[arrIdx][k] += subRow[arrIdx + stride][k];
-		}
-		__syncthreads();
-	}
+	// for(int stride = 1; stride<blockDim.x; stride *= 2){
+	// 	int arrIdx = x*stride*2;	
+	// 	if(x+ stride<blockDim.x){
+	// 		subRow[arrIdx][k] += subRow[arrIdx + stride][k];
+	// 	}
+	// 	__syncthreads();
+	// }
 	if (x == 0){
 		d_accels_sum[i][k]=subRow[0][k];
 	}
@@ -81,6 +85,9 @@ __global__ void sumAccels(vector3 *d_accels, vector3 *d_accels_sum){
 __global__ void updateVelPos(vector3 *d_hPos, vector3 *d_hVel, vector3* d_accels_sum){
 	int i = blockIdx.y*blockDim.y + threadIdx.y;
 	int k = threadIdx.z;
+	if(i>=NUMENTITIES){
+		return;
+	}
 	d_hVel[i][k]+=d_accels_sum[i][k]*INTERVAL;
 	d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
 }
